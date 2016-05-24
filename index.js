@@ -4,11 +4,23 @@ var _ = require('lodash');
 var winston = require('winston');
 var request = require('request');
 
+var logger = new (winston.Logger)({
+  transports: [
+    new (winston.transports.Console)({
+      colorize: true,
+    }),
+    new (winston.transports.File)({
+      filename: 'fitbot.log',
+      json: false,
+    }),
+  ],
+});
+
 try {
   const config = require('./config');
 }
 catch (e) {
-  winston.error(e);
+  logger.error(e);
   process.exit(1);
 }
 
@@ -37,10 +49,10 @@ function checkForNewActivities() {
 
 function postActivitiesToSlack(error, club, activities) {
   if (error) {
-    winston.error(error);
+    logger.error(error);
     return;
   } else if (!activities) {
-    winston.info('No activities found.');
+    logger.info('No activities found.');
     return;
   }
 
@@ -52,7 +64,7 @@ function postActivitiesToSlack(error, club, activities) {
   // Sort activities by start_date descending.
   activities = _.sortBy(activities, 'start_date').reverse()
 
-  winston.info(util.format('Found %d new activities.', activities.length));
+  logger.info(util.format('Found %d new activities.', activities.length));
 
   // Post activities to Slack.
   activities.forEach(function(activity) {
@@ -69,10 +81,10 @@ function postActivitiesToSlack(error, club, activities) {
       json: true,
     }, function(error) {
       if (error) {
-        winston.error(error);
+        logger.error(error);
       }
       else {
-        winston.info(util.format('Posted to slack: %s', message));
+        logger.info(util.format('Posted to slack: %s', message));
       }
     });
   });
