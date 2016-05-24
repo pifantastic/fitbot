@@ -1,0 +1,18 @@
+{
+  "name": "fitbot",
+  "version": "1.0.0",
+  "description": "Send Strava activities to Slack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aaron Forsander",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.13.1",
+    "request": "^2.72.0",
+    "slackbots": "^0.5.1",
+    "strava-v3": "^1.10.0",
+    "winston": "^2.2.0"
+  }
+}

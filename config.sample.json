@@ -1,0 +1,14 @@
+{
+  "activity_check_interval": 60000,
+
+  "strava_clubs": [
+    {
+      "id": 1234,
+      "webhook": "https://hooks.slack.com/services/XXXX/XXXX/XXXX"
+    }
+  ],
+  "strava_token": "XXXX",
+
+  "slack_name": "fitbot",
+  "slack_icon": "http://i.imgur.com/2E6yJjV.png"
+}
