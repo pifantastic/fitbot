@@ -51,8 +51,8 @@ function postActivitiesToSlack(error, club, activities) {
   if (error) {
     logger.error(error);
     return;
-  } else if (!activities) {
-    logger.info('No activities found.');
+  } else if (!activities || !activities.length) {
+    logger.info(util.format('No activities found for %s.', club.id));
     return;
   }
 
