@@ -1,3 +1,5 @@
+#!/usr/bin/env nodejs
+
 var util = require('util');
 var strava = require('strava-v3');
 var _ = require('lodash');
