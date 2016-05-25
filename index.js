@@ -5,6 +5,7 @@ const strava = require('strava-v3');
 const _ = require('lodash');
 const winston = require('winston');
 const request = require('request');
+const Set = require('Set');
 
 const logger = new (winston.Logger)({
   transports: [
