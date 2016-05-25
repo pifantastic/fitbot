@@ -27,6 +27,7 @@ catch (e) {
 }
 
 var lastActivityCheck = Date.now();
+var seenActivities = new Set();
 
 const VERBS = {
   'Ride': 'rode',
@@ -38,44 +39,39 @@ const EMOJI = {
   'Run': ':runner:',
 };
 
-function checkForNewActivities() {
+function checkForNewActivities(initial) {
   config.strava_clubs.forEach(function(club) {
     strava.clubs.listActivities({
       access_token: config.strava_token,
+      per_page: 200,
       id: club.id,
     }, function(error, activities) {
-      postActivitiesToSlack(error, club, activities);
+      if (error) {
+        logger.error(error);
+      }
+      else if (!activities || !activities.length) {
+        logger.info(util.format('No activities found for %s.', club.id));
+      }
+      else {
+        const newActivities = activities.filter(function(activity) {
+          return !seenActivities.has(activity.id);
+        });
+
+        logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id));
+
+        if (!initial) {
+          newActivities.forEach(function(activity) {
+            postMessageToSlack(formatActivity(activity));
+          });
+        }
+
+        newActivities.forEach(function(activity) {
+          seenActivities.add(activity.id);
+        });
+      }
     });
   });
 };
-
-function postActivitiesToSlack(error, club, activities) {
-  if (error) {
-    logger.error(error);
-    return;
-  } else if (!activities || !activities.length) {
-    logger.info(util.format('No activities found for %s.', club.id));
-    return;
-  }
-
-  // Filter to new activities.
-  activities = _.filter(activities, function(activity) {
-    return Date.parse(activity.start_date) > lastActivityCheck;
-  });
-
-  // Sort activities by start_date descending.
-  activities = _.sortBy(activities, 'start_date').reverse()
-
-  logger.info(util.format('Found %d new activities for %s.', activities.length, club.id));
-
-  // Post activities to Slack.
-  activities.forEach(function(activity) {
-    const message = formatActivity(activity);
-    postMessageToSlack(club, message);
-  });
-
-  lastActivityCheck = Date.now();
-}
 
 function postMessageToSlack(club, message) {
   request.post({
@@ -109,6 +105,6 @@ function formatActivity(activity) {
   return util.format(message, who, verb, distance, emoji, activity.name, emoji, link);
 }
 
-checkForNewActivities();
+checkForNewActivities(true);
 
 setInterval(checkForNewActivities, config.activity_check_interval);
