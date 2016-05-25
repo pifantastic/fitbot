@@ -1,12 +1,12 @@
 #!/usr/bin/env nodejs
 
-var util = require('util');
-var strava = require('strava-v3');
-var _ = require('lodash');
-var winston = require('winston');
-var request = require('request');
+const util = require('util');
+const strava = require('strava-v3');
+const _ = require('lodash');
+const winston = require('winston');
+const request = require('request');
 
-var logger = new (winston.Logger)({
+const logger = new (winston.Logger)({
   transports: [
     new (winston.transports.Console)({
       colorize: true,
@@ -26,7 +26,7 @@ catch (e) {
   process.exit(1);
 }
 
-var lastActivityCheck = Date.now();
+var lastActivityCheck = Date.now() - (1000 * 60 * 60 * 24);
 
 const VERBS = {
   'Ride': 'rode',
@@ -66,32 +66,35 @@ function postActivitiesToSlack(error, club, activities) {
   // Sort activities by start_date descending.
   activities = _.sortBy(activities, 'start_date').reverse()
 
-  logger.info(util.format('Found %d new activities.', activities.length));
+  logger.info(util.format('Found %d new activities for %s.', activities.length, club.id));
 
   // Post activities to Slack.
   activities.forEach(function(activity) {
     const message = formatActivity(activity);
-
-    request.post({
-      url: club.webhook,
-      method: 'POST',
-      body: {
-        username: config.slack_name,
-        icon_url: config.slack_icon,
-        text: message,
-      },
-      json: true,
-    }, function(error) {
-      if (error) {
-        logger.error(error);
-      }
-      else {
-        logger.info(util.format('Posted to slack: %s', message));
-      }
-    });
+    postMessageToSlack(club, message);
   });
 
   lastActivityCheck = Date.now();
+}
+
+function postMessageToSlack(club, message) {
+  request.post({
+    url: club.webhook,
+    method: 'POST',
+    json: true,
+    body: {
+      username: config.slack_name,
+      icon_url: config.slack_icon,
+      text: message,
+    },
+  }, function(error) {
+    if (error) {
+      logger.error(error);
+    }
+    else {
+      logger.info(util.format('Posted to slack: %s', message));
+    }
+  });
 }
 
 function formatActivity(activity) {
