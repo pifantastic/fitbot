@@ -26,7 +26,7 @@ catch (e) {
   process.exit(1);
 }
 
-var lastActivityCheck = Date.now() - (1000 * 60 * 60 * 24);
+var lastActivityCheck = Date.now();
 
 const VERBS = {
   'Ride': 'rode',
