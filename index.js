@@ -27,8 +27,7 @@ catch (e) {
   process.exit(1);
 }
 
-var lastActivityCheck = Date.now();
-var seenActivities = new Set();
+const seenActivities = new Set();
 
 const VERBS = {
   'Ride': 'rode',
@@ -95,15 +94,22 @@ function postMessageToSlack(webhook, message) {
 }
 
 function formatActivity(activity) {
-  const message = '%s just %s %d miles! %s %s %s %s';
+  const message = '%s %s %d miles! %s %s %s %s';
 
   const emoji = EMOJI[activity.type];
-  const who = util.format('%s %s', activity.athlete.firstname, activity.athlete.lastname);
+  const who = util.format('%s %s', dingProtect(activity.athlete.firstname), dingProtect(activity.athlete.lastname));
   const link = util.format('<https://www.strava.com/activities/%d>', activity.id);
   const distance = Math.round((activity.distance * 0.00062137) * 100) / 100;
   const verb = VERBS[activity.type] || activity.type;
 
   return util.format(message, who, verb, distance, emoji, activity.name, emoji, link);
+}
+
+function dingProtect(string) {
+  if (string && string.length > 1) {
+    return string[0] + '.' + string.substring(1);
+  }
+  return string;
 }
 
 checkForNewActivities(true);
