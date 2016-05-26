@@ -62,7 +62,7 @@ function checkForNewActivities(initial) {
 
         if (!initial) {
           newActivities.forEach(function(activity) {
-            postMessageToSlack(formatActivity(activity));
+            postMessageToSlack(club.webhook, formatActivity(activity));
           });
         }
 
@@ -74,9 +74,9 @@ function checkForNewActivities(initial) {
   });
 };
 
-function postMessageToSlack(club, message) {
+function postMessageToSlack(webhook, message) {
   request.post({
-    url: club.webhook,
+    url: webhook,
     method: 'POST',
     json: true,
     body: {
