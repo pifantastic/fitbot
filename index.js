@@ -40,6 +40,8 @@ const EMOJI = {
 };
 
 function checkForNewActivities(initial) {
+  initial = !!initial
+
   config.strava_clubs.forEach(function(club) {
     strava.clubs.listActivities({
       access_token: config.strava_token,
@@ -57,11 +59,24 @@ function checkForNewActivities(initial) {
           return !seenActivities.has(activity.id);
         });
 
-        logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id));
+        logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id), {
+          initial: initial,
+        });
+
+        const ONE_DAY_AGO = new Date().getTime() - 1000 * 60 * 60 * 24;
 
         if (!initial) {
           newActivities.forEach(function(activity) {
-            postMessageToSlack(club.webhook, formatActivity(activity));
+            const startDate = new Date(activity.start_date);
+            if (startDate.getTime() >= ONE_DAY_AGO) {
+              postMessageToSlack(club.webhook, formatActivity(activity));
+            }
+            else {
+              logger.info('Not posting activity to slack because it\'s old', {
+                activity: activity.id,
+                start_date: activity.start_date,
+              });
+            }
           });
         }
 
