@@ -47,6 +47,9 @@ example: `https://www.strava.com/clubs/123456`.
 ### `strava_token` (Default: "")
 This is a Strava API token. You can get one of these by creating a new Strava API application. More information on how to do that can be found [here](https://www.strava.com/settings/api)
 
+*NOTE*: The user who created the Strava API application needs to be a member of
+all of the clubs configured in `strava_clubs` for fitbot to work!
+
 ### `slack_name` (Default: "fitbot")
 This is the name fitbot will use when posting activites to Slack.
 
