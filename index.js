@@ -19,8 +19,10 @@ const logger = new (winston.Logger)({
   ],
 });
 
+let config = {};
+
 try {
-  const config = require('./config');
+  config = require('./config');
 }
 catch (e) {
   logger.error(e);
