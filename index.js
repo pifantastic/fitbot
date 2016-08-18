@@ -58,7 +58,7 @@ function checkForNewActivities(initial) {
       }
       else {
         const newActivities = activities.filter(function(activity) {
-          return !seenActivities.has(activity.id);
+          return !seenActivities.has(activity.id) && !activity.commute;
         });
 
         logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id), {
