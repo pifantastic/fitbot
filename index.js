@@ -65,18 +65,19 @@ function checkForNewActivities(initial) {
           initial: initial,
         });
 
-        const ONE_DAY_AGO = new Date().getTime() - 1000 * 60 * 60 * 24;
+        const THREE_DAYS_AGO = new Date().getTime() - 1000 * 60 * 60 * 24 * 3;
 
         if (!initial) {
           newActivities.forEach(function(activity) {
             const startDate = new Date(activity.start_date);
-            if (startDate.getTime() >= ONE_DAY_AGO) {
+            if (startDate.getTime() >= THREE_DAYS_AGO) {
               postMessageToSlack(club.webhook, formatActivity(activity));
             }
             else {
               logger.info('Not posting activity to slack because it\'s old', {
                 activity: activity.id,
                 start_date: activity.start_date,
+                club: club.id,
               });
             }
           });
