@@ -68,15 +68,25 @@ function checkForNewActivities(initial) {
         const THREE_DAYS_AGO = new Date().getTime() - 1000 * 60 * 60 * 24 * 3;
 
         if (!initial) {
-          newActivities.forEach(function(activity) {
-            const startDate = new Date(activity.start_date);
+          newActivities.forEach(function(activitySummary) {
+            const startDate = new Date(activitySummary.start_date);
+
             if (startDate.getTime() >= THREE_DAYS_AGO) {
-              postMessageToSlack(club.webhook, formatActivity(activity));
+              strava.activities.get({
+                access_token: config.strava_token,
+                id: activitySummary.id
+              }, function(error, activity) {
+                if (error) {
+                  logger.error(error);
+                } else {
+                  postActivityToSlack(club.webhook, activity);
+                }
+              });
             }
             else {
               logger.info('Not posting activity to slack because it\'s old', {
-                activity: activity.id,
-                start_date: activity.start_date,
+                activity: activitySummary.id,
+                start_date: activitySummary.start_date,
                 club: club.id,
               });
             }
@@ -91,7 +101,17 @@ function checkForNewActivities(initial) {
   });
 };
 
-function postMessageToSlack(webhook, message) {
+function postActivityToSlack(webhook, activity) {
+  var message = formatActivity(activity);
+  var attachments = [];
+
+  if (activity.photos && activity.photos.count > 0) {
+    attachments.push({
+      image_url: activity.photos.primary.urls['600'],
+      thumb_url: activity.photos.primary.urls['100'],
+    });
+  }
+
   request.post({
     url: webhook,
     method: 'POST',
@@ -100,6 +120,7 @@ function postMessageToSlack(webhook, message) {
       username: config.slack_name,
       icon_url: config.slack_icon,
       text: message,
+      attachments: attachments,
     },
   }, function(error) {
     if (error) {
