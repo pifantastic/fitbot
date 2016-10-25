@@ -58,7 +58,9 @@ function checkForNewActivities(initial) {
       }
       else {
         const newActivities = activities.filter(function(activity) {
-          return !seenActivities.has(activity.id) && !activity.commute;
+          // Filter out activities we've already seen AND Bike activities tagged as "Commute"
+          return !seenActivities.has(activity.id) &&   
+                 !((activity.type == 'Bike') && activity.commute);
         });
 
         logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id), {
