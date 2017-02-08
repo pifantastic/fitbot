@@ -60,10 +60,9 @@ function checkForNewActivities(initial) {
         logger.info(util.format('No activities found for %s.', club.id));
       }
       else {
+        // Filter out activities we've already seen.
         const newActivities = activities.filter(function(activity) {
-          // Filter out activities we've already seen AND Bike activities tagged as "Commute"
-          return !seenActivities.has(activity.id) &&
-                 !((activity.type === 'Bike') && activity.commute);
+          return !seenActivities.has(activity.id);
         });
 
         logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id), {
@@ -76,7 +75,20 @@ function checkForNewActivities(initial) {
           newActivities.forEach(function(activitySummary) {
             const startDate = new Date(activitySummary.start_date);
 
-            if (startDate.getTime() >= SEVEN_DAYS_AGO) {
+            if (activity.type === 'Bike' && activity.commute) {
+              logger.info('Not posting activity to slack because it\'s a bike commute', {
+                activity: activitySummary.id,
+                club: club.id,
+              });
+            }
+            else if (startDate.getTime() <= SEVEN_DAYS_AGO) {
+              logger.info('Not posting activity to slack because it\'s old', {
+                activity: activitySummary.id,
+                start_date: activitySummary.start_date,
+                club: club.id,
+              });
+            }
+            else {
               strava.activities.get({
                 access_token: config.strava_token,
                 id: activitySummary.id
@@ -89,13 +101,6 @@ function checkForNewActivities(initial) {
                 } else {
                   postActivityToSlack(club.webhook, activitySummary.athlete, activity);
                 }
-              });
-            }
-            else {
-              logger.info('Not posting activity to slack because it\'s old', {
-                activity: activitySummary.id,
-                start_date: activitySummary.start_date,
-                club: club.id,
               });
             }
           });
