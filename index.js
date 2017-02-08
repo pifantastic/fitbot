@@ -51,7 +51,10 @@ function checkForNewActivities(initial) {
       id: club.id,
     }, function(error, activities) {
       if (error) {
-        logger.error(error);
+        logger.error('Error listing activities for club', {
+          error: error,
+          club: club,
+        });
       }
       else if (!activities || !activities.length) {
         logger.info(util.format('No activities found for %s.', club.id));
@@ -59,27 +62,30 @@ function checkForNewActivities(initial) {
       else {
         const newActivities = activities.filter(function(activity) {
           // Filter out activities we've already seen AND Bike activities tagged as "Commute"
-          return !seenActivities.has(activity.id) &&   
-                 !((activity.type == 'Bike') && activity.commute);
+          return !seenActivities.has(activity.id) &&
+                 !((activity.type === 'Bike') && activity.commute);
         });
 
         logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id), {
           initial: initial,
         });
 
-        const THREE_DAYS_AGO = new Date().getTime() - 1000 * 60 * 60 * 24 * 3;
+        const SEVEN_DAYS_AGO = new Date().getTime() - 1000 * 60 * 60 * 24 * 7;
 
         if (!initial) {
           newActivities.forEach(function(activitySummary) {
             const startDate = new Date(activitySummary.start_date);
 
-            if (startDate.getTime() >= THREE_DAYS_AGO) {
+            if (startDate.getTime() >= SEVEN_DAYS_AGO) {
               strava.activities.get({
                 access_token: config.strava_token,
                 id: activitySummary.id
               }, function(error, activity) {
                 if (error) {
-                  logger.error(error);
+                  logger.error('Error fetching activity details', {
+                    error: error,
+                    activity: activitySummary,
+                  });
                 } else {
                   postActivityToSlack(club.webhook, activitySummary.athlete, activity);
                 }
@@ -126,7 +132,11 @@ function postActivityToSlack(webhook, athlete, activity) {
     },
   }, function(error) {
     if (error) {
-      logger.error(error);
+      logger.error('Error posting message to Slack', {
+        webhook: webhook,
+        error: error,
+        activity: activity,
+      });
     }
     else {
       logger.info(util.format('Posted to slack: %s', message));
