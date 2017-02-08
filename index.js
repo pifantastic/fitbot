@@ -75,7 +75,7 @@ function checkForNewActivities(initial) {
           newActivities.forEach(function(activitySummary) {
             const startDate = new Date(activitySummary.start_date);
 
-            if (activity.type === 'Bike' && activity.commute) {
+            if (activitySummary.type === 'Bike' && activitySummary.commute) {
               logger.info('Not posting activity to slack because it\'s a bike commute', {
                 activity: activitySummary.id,
                 club: club.id,
