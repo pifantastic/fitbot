@@ -11,6 +11,7 @@
   "dependencies": {
     "Set": "^0.4.1",
     "lodash": "^4.13.1",
+    "lowdb": "^0.16.0",
     "request": "^2.72.0",
     "slackbots": "^0.5.1",
     "strava-v3": "^1.10.0",

@@ -3,33 +3,11 @@
 const util = require('util');
 const strava = require('strava-v3');
 const _ = require('lodash');
-const winston = require('winston');
 const request = require('request');
-const Set = require('Set');
 
-const logger = new (winston.Logger)({
-  transports: [
-    new (winston.transports.Console)({
-      colorize: true,
-    }),
-    new (winston.transports.File)({
-      filename: 'fitbot.log',
-      json: false,
-    }),
-  ],
-});
-
-let config = {};
-
-try {
-  config = require('./config');
-}
-catch (e) {
-  logger.error(e);
-  process.exit(1);
-}
-
-const seenActivities = new Set();
+const logger = require('./lib/logger');
+const db = require('./lib/db');
+const config = require('./lib/config');
 
 const VERBS = {
   'Ride': 'rode',
@@ -51,55 +29,44 @@ function checkForNewActivities(initial) {
       id: club.id,
     }, function(error, activities) {
       if (error) {
-        logger.error('Error listing activities for club', {
-          error: error,
-          club: club,
-        });
+        logger.error('Error listing activities', {error: error, club: club});
       }
       else if (!activities || !activities.length) {
-        logger.info(util.format('No activities found for %s.', club.id));
+        logger.info('No activities found', {response: activities, club: club.id});
       }
       else {
         // Filter out activities we've already seen.
         const newActivities = activities.filter(function(activity) {
-          return !seenActivities.has(activity.id);
+          return !db.get('activities').find({id: activity.id}).value();
         });
 
-        logger.info(util.format('Found %d new activities for %s.', newActivities.length, club.id), {
-          initial: initial,
-        });
+        logger.info('Checked for activities', {count: newActivities.length, club: club.id, initial: initial});
 
         const SEVEN_DAYS_AGO = new Date().getTime() - 1000 * 60 * 60 * 24 * 7;
 
         if (!initial) {
-          newActivities.forEach(function(activitySummary) {
-            const startDate = new Date(activitySummary.start_date);
+          newActivities.forEach(function(summary) {
+            const startDate = new Date(summary.start_date);
 
-            if (activitySummary.type === 'Bike' && activitySummary.commute) {
-              logger.info('Not posting activity to slack because it\'s a bike commute', {
-                activity: activitySummary.id,
-                club: club.id,
-              });
+            if (summary.type === 'Bike' && summary.commute) {
+              logger.info('Not posting to slack because it\'s a bike commute', {activity: summary.id, club: club.id});
             }
             else if (startDate.getTime() <= SEVEN_DAYS_AGO) {
-              logger.info('Not posting activity to slack because it\'s old', {
-                activity: activitySummary.id,
-                start_date: activitySummary.start_date,
+              logger.info('Not posting to slack because it\'s old', {
+                activity: summary.id,
                 club: club.id,
+                start_date: summary.start_date,
               });
             }
             else {
               strava.activities.get({
                 access_token: config.strava_token,
-                id: activitySummary.id
+                id: summary.id
               }, function(error, activity) {
                 if (error) {
-                  logger.error('Error fetching activity details', {
-                    error: error,
-                    activity: activitySummary,
-                  });
+                  logger.error('Error fetching activity details', {error: error, activity: summary});
                 } else {
-                  postActivityToSlack(club.webhook, activitySummary.athlete, activity);
+                  postActivityToSlack(club.webhook, summary.athlete, activity);
                 }
               });
             }
@@ -107,7 +74,7 @@ function checkForNewActivities(initial) {
         }
 
         newActivities.forEach(function(activity) {
-          seenActivities.add(activity.id);
+          db.get('activities').push({id: activity.id}).write();
         });
       }
     });
@@ -116,14 +83,6 @@ function checkForNewActivities(initial) {
 
 function postActivityToSlack(webhook, athlete, activity) {
   var message = formatActivity(athlete, activity);
-  var attachments = [];
-
-  if (activity.photos && activity.photos.count > 0) {
-    attachments.push({
-      image_url: activity.photos.primary.urls['600'],
-      thumb_url: activity.photos.primary.urls['100'],
-    });
-  }
 
   request.post({
     url: webhook,
@@ -133,7 +92,6 @@ function postActivityToSlack(webhook, athlete, activity) {
       username: config.slack_name,
       icon_url: config.slack_icon,
       text: message,
-      attachments: attachments,
     },
   }, function(error) {
     if (error) {
