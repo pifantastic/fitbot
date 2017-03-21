@@ -62,6 +62,18 @@ This is the icon that fitbot will use when posting activities to Slack.
 
 > This prevents fitbot from alerting users when it posts to Slack.
 
+## Changelog
+
+### `1.1.0`
+
+fitbot maintains a list of activities to prevent reposting activities it has already posted. Historically that list has been kept in
+memory. This, however, means fitbit did not persist across restarts/crashes, causing it to occasionally bomb slack with lots of activities
+that had already been posted. Version `1.1.0` uses a file-backed database to maintain the list of activities to avoid this.
+
+### `1.0.0`
+
+Initial release.
+
 ## License
 
     Copyright (c) 2016, Aaron Forsander
