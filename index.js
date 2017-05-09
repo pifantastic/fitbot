@@ -17,6 +17,7 @@ const VERBS = {
 const EMOJI = {
   'Ride': ':bike:',
   'Run': ':runner:',
+  'Swim': ':swimmer:',
 };
 
 function checkForNewActivities(initial) {
