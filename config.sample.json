@@ -4,7 +4,8 @@
   "strava_clubs": [
     {
       "id": 1234,
-      "webhook": "https://hooks.slack.com/services/XXXX/XXXX/XXXX"
+      "webhook": "https://hooks.slack.com/services/XXXX/XXXX/XXXX",
+      "blocklist": []
     }
   ],
   "strava_token": "XXXX",
