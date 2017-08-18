@@ -34,7 +34,8 @@ webhook needed to post them to Slack. Here is an example of the format:
 [
   {
     "id": 1234,
-    "webhook": "https://hooks.slack.com/services/XXXX/XXXX/XXXX"
+    "webhook": "https://hooks.slack.com/services/XXXX/XXXX/XXXX",
+    "blocklist": []
   }
 ]
 ```
@@ -43,6 +44,8 @@ webhook needed to post them to Slack. Here is an example of the format:
 example: `https://www.strava.com/clubs/123456`.
 
 `webhook` is a Slack incoming webhook. You can find more information on how to set these up [here](https://api.slack.com/incoming-webhooks).
+
+`blocklist` is a list of athlete IDs that should not have their activities posted to Slack.
 
 ### `strava_token` (Default: "")
 This is a Strava API token. You can get one of these by creating a new Strava API application. More information on how to do that can be found [here](https://www.strava.com/settings/api)
@@ -63,6 +66,9 @@ This is the icon that fitbot will use when posting activities to Slack.
 > This prevents fitbot from alerting users when it posts to Slack.
 
 ## Changelog
+
+### `1.2.0`
+`blocklist` option added for athletes who wish to be a part of a club but do not wish to have their activities posted to Slack.
 
 ### `1.1.0`
 
